@@ -1,88 +1,19 @@
 //
 //
 //
+import FormContainer from "@/components/FormContainer"
 import FormModal from "@/components/FormModal"
 import Pagination from "@/components/Pagination"
 import Table from "@/components/Table"
 import TableSearch from "@/components/TableSearch"
-import { eventsData, role } from "@/lib/data"
 import prisma from "@/lib/prisma"
 import { ITEMS_PER_PAGE } from "@/lib/settings"
+import { getRole, getUserId } from "@/lib/utils"
 import { Class, Event, Prisma } from "@prisma/client"
 import Image from "next/image"
-import Link from "next/link"
 
 
 type EventList = Event & { class: Class }
-
-
-const columns = [
-        {
-                header: "Title",
-                accessor: "title",
-        },
-        {
-                header: "Class",
-                accessor: "class",
-                className: "hidden md:table-cell",
-        },
-        {
-                header: "Date",
-                accessor: "date",
-                className: "hidden md:table-cell",
-        },
-        {
-                header: "Start Time",
-                accessor: "startTime",
-                className: "hidden md:table-cell",
-        },
-        {
-                header: "End Time",
-                accessor: "endTime",
-                className: "hidden md:table-cell",
-        },
-        {
-                header: "Actions",
-                accessor: "action",
-        }
-]
-
-
-const renderRow = (item: EventList) => {
-        return (
-                <tr key={item.id} className="border-b border-gray-200 text-sm even:bg-slate-50 hover:bg-lamaPurpleLight">
-                        <td className="flex items-center gap-4 p-4">
-                                <h3 className="font-semibold">{item.title}</h3>
-                        </td>
-                        <td className="hidden md:table-cell">{item.class.name}</td>
-                        <td className="hidden md:table-cell">{new Intl.DateTimeFormat("pt-BR").format(item.startTime)}</td>
-                        <td className="hidden md:table-cell">
-                                {item.startTime.toLocaleTimeString("pt-BR", {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                        hour12: false,
-                                })}
-                        </td>
-                        <td className="hidden md:table-cell">
-                                {item.endTime.toLocaleTimeString("pt-BR", {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                        hour12: false,
-                                })}
-                        </td>
-                        <td>
-                                <div className="flex items-center gap-2">
-                                        {role === "admin" && (
-                                                <>
-                                                <FormModal table="event" type="update" data={item} />
-                                                <FormModal table="event" type="delete" id={item.id} />
-                                                </>
-                                        )}
-                                </div>
-                        </td>
-                </tr>
-        )
-}
 
 
 const EventListPage = async ({
@@ -90,6 +21,83 @@ const EventListPage = async ({
 }: {
         searchParams: { [key: string]: string | undefined };
 }) => {
+
+        const columns = [
+                {
+                        header: "Title",
+                        accessor: "title",
+                },
+                {
+                        header: "Class",
+                        accessor: "class",
+                        className: "hidden md:table-cell",
+                },
+                {
+                        header: "Date",
+                        accessor: "date",
+                        className: "hidden md:table-cell",
+                },
+                {
+                        header: "Start Time",
+                        accessor: "startTime",
+                        className: "hidden md:table-cell",
+                },
+                {
+                        header: "End Time",
+                        accessor: "endTime",
+                        className: "hidden md:table-cell",
+                },
+                ...(
+                        getRole() === "admin"
+                                ? [{
+                                        header: "Actions",
+                                        accessor: "action",
+                                }]
+                                : []
+                ),
+        ]
+
+
+        const renderRow = (item: EventList) => {
+                return (
+                        <tr key={item.id} className="border-b border-gray-200 text-sm even:bg-slate-50 hover:bg-lamaPurpleLight">
+                                <td className="flex items-center gap-4 p-4">
+                                        {item.title}
+                                </td>
+                                <td className="hidden md:table-cell">
+                                        {item.class?.name || "-"}
+                                </td>
+                                <td className="hidden md:table-cell">
+                                        {new Intl.DateTimeFormat("pt-BR").format(item.startTime)}
+                                </td>
+                                <td className="hidden md:table-cell">
+                                        {item.startTime.toLocaleTimeString("pt-BR", {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                                hour12: false,
+                                        })}
+                                </td>
+                                <td className="hidden md:table-cell">
+                                        {item.endTime.toLocaleTimeString("pt-BR", {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                                hour12: false,
+                                        })}
+                                </td>
+                                <td>
+                                        <div className="flex items-center gap-2">
+                                                {getRole() === "admin" && (
+                                                        <>
+                                                                <FormContainer table="event" type="update" data={item} />
+                                                                <FormContainer table="event" type="delete" id={item.id} />
+                                                        </>
+                                                )}
+                                        </div>
+                                </td>
+                        </tr>
+                )
+        }
+
 
         const { page, ...queryParams } = searchParams;
         const p = page ? parseInt(page) : 1;
@@ -113,6 +121,29 @@ const EventListPage = async ({
                 }
         }
 
+
+        // ROLE CONDITIONS
+        const roleConditions = {
+                teacher: { lessons: { some: { teacherId: getUserId() } } },
+                student: { students: { some: { id: getUserId() } } },
+                parent: { students: { some: { parentId: getUserId() } } },
+        }
+        query.OR = [
+                { classId: null },
+                { class: roleConditions[getRole() as keyof typeof roleConditions] || {} }
+        ]
+
+
+        switch (getRole()) {
+                case "admin":
+                        break
+
+                case "teacher":
+                        query.OR = [
+                                { classId: null },
+                                {}
+                        ]
+        }
 
         const [data, count] = await prisma.$transaction([
                 prisma.event.findMany({
@@ -146,11 +177,8 @@ const EventListPage = async ({
                                                 <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow ">
                                                         <Image src="/sort.png" alt="" width={14} height={14} />
                                                 </button>
-                                                {role === "admin" && (
-                                                        // <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow ">
-                                                        //         <Image src="/plus.png" alt="" width={14} height={14} />
-                                                        // </button>
-                                                        <FormModal table="event" type="create" />
+                                                {getRole() === "admin" && (
+                                                        <FormContainer table="event" type="create" />
                                                 )}
                                         </div>
                                 </div>

@@ -1,16 +1,16 @@
 //
 //
 //
+import FormContainer from "@/components/FormContainer"
 import FormModal from "@/components/FormModal"
 import Pagination from "@/components/Pagination"
 import Table from "@/components/Table"
 import TableSearch from "@/components/TableSearch"
-import { examsData, lessonsData, role } from "@/lib/data"
 import prisma from "@/lib/prisma"
 import { ITEMS_PER_PAGE } from "@/lib/settings"
+import { getRole, getUserId } from "@/lib/utils"
 import { Class, Exam, Lesson, Prisma, Subject, Teacher } from "@prisma/client"
 import Image from "next/image"
-import Link from "next/link"
 
 
 type ExamList = Exam & {
@@ -22,56 +22,6 @@ type ExamList = Exam & {
 }
 
 
-const columns = [
-        {
-                header: "Subject",
-                accessor: "subject",
-        },
-        {
-                header: "Class",
-                accessor: "class",
-                className: "hidden md:table-cell",
-        },
-        {
-                header: "Teacher",
-                accessor: "teacher",
-                className: "hidden md:table-cell",
-        },
-        {
-                header: "Date",
-                accessor: "date",
-                className: "hidden md:table-cell",
-        },
-        {
-                header: "Actions",
-                accessor: "action",
-        }
-]
-
-
-const renderRow = (item: ExamList) => {
-        return (
-                <tr key={item.id} className="border-b border-gray-200 text-sm even:bg-slate-50 hover:bg-lamaPurpleLight">
-                        <td className="flex items-center gap-4 p-4">
-                                <h3 className="font-semibold">{item.lesson.subject.name}</h3>
-                        </td>
-                        <td className="hidden md:table-cell">{item.lesson.class.name}</td>
-                        <td className="hidden md:table-cell">{item.lesson.teacher.name + " " + item.lesson.teacher.surname}</td>
-                        <td className="hidden md:table-cell">{new Intl.DateTimeFormat("pt-BR").format(item.startTime)}</td>
-                        <td>
-                                <div className="flex items-center gap-2">
-                                        {role === "admin" && (
-                                                <>
-                                                <FormModal table="exam" type="update" data={item} />
-                                                <FormModal table="exam" type="delete" id={item.id} />
-                                                </>
-                                        )}
-                                </div>
-                        </td>
-                </tr>
-        )
-}
-
 
 const ExamListPage = async ({
         searchParams,
@@ -79,10 +29,74 @@ const ExamListPage = async ({
         searchParams: { [key: string]: string | undefined };
 }) => {
 
+        const columns = [
+                {
+                        header: "Subject",
+                        accessor: "subject",
+                },
+                {
+                        header: "Class",
+                        accessor: "class",
+                        className: "hidden md:table-cell",
+                },
+                {
+                        header: "Teacher",
+                        accessor: "teacher",
+                        className: "hidden md:table-cell",
+                },
+                {
+                        header: "Date",
+                        accessor: "date",
+                        className: "hidden md:table-cell",
+                },
+                ...(
+                        ["admin", "teacher"].includes(getRole())
+                                ? [{
+                                        header: "Actions",
+                                        accessor: "action",
+                                }]
+                                : []
+                )
+        ]
+
+
+        const renderRow = (item: ExamList) => {
+                return (
+                        <tr key={item.id} className="border-b border-gray-200 text-sm even:bg-slate-50 hover:bg-lamaPurpleLight">
+                                <td className="flex items-center gap-4 p-4">
+                                        {item.lesson.subject.name}
+                                </td>
+                                <td className="hidden md:table-cell">
+                                        {item.lesson.class.name}
+                                </td>
+                                <td className="hidden md:table-cell">
+                                        {item.lesson.teacher.name + " " + item.lesson.teacher.surname}
+                                </td>
+                                <td className="hidden md:table-cell">
+                                        {new Intl.DateTimeFormat("pt-BR").format(item.startTime)}
+                                </td>
+                                <td>
+                                        <div className="flex items-center gap-2">
+                                                {(getRole() === "admin" || getRole() === "teacher") && (
+                                                        <>
+                                                                <FormContainer table="exam" type="update" data={item} />
+                                                                <FormContainer table="exam" type="delete" id={item.id} />
+                                                        </>
+                                                )}
+                                        </div>
+                                </td>
+                        </tr>
+                )
+        }
+
+
+
         const { page, ...queryParams } = searchParams;
         const p = page ? parseInt(page) : 1;
 
         const query: Prisma.ExamWhereInput = {}
+        query.lesson = {}
+
 
         if (queryParams) {
                 for (const [key, value] of Object.entries(queryParams)) {
@@ -92,21 +106,47 @@ const ExamListPage = async ({
 
                         switch (key) {
                                 case "search":
-                                        query.lesson = { name: { contains: value, mode: "insensitive" } }
+                                        query.lesson.subject = { name: { contains: value, mode: "insensitive" } }
                                         break
 
                                 case "classId":
-                                        query.lesson = { classId: parseInt(value) }
+                                        query.lesson.classId = parseInt(value)
                                         break
 
                                 case "teacherId":
-                                        query.lesson = { teacherId: value }
+                                        query.lesson.teacherId = value
                                         break
 
                                 default:
                                         break
                         }
                 }
+        }
+
+
+        // ROLE CONDITIONS
+        switch (getRole()) {
+                case "admin":
+                        break
+
+                case "teacher":
+                        query.lesson.teacherId = getUserId()
+                        break
+
+                case "student":
+                        query.lesson.class = {
+                                students: {
+                                        some: { id: getUserId() }
+                                }
+                        }
+                        break
+
+                case "parent":
+                        query.lesson.class = {
+                                students: {
+                                        some: { parentId: getUserId() }
+                                }
+                        }
         }
 
 
@@ -148,11 +188,11 @@ const ExamListPage = async ({
                                                 <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow ">
                                                         <Image src="/sort.png" alt="" width={14} height={14} />
                                                 </button>
-                                                {role === "admin" && (
+                                                {(getRole() === "admin" || getRole() === "teacher") && (
                                                         // <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow ">
                                                         //         <Image src="/plus.png" alt="" width={14} height={14} />
                                                         // </button>
-                                                        <FormModal table="exam" type="create" />
+                                                        <FormContainer table="exam" type="create" />
                                                 )}
                                         </div>
                                 </div>

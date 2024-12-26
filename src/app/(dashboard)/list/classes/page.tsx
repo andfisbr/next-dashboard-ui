@@ -1,70 +1,21 @@
 //
 //
 //
+import FormContainer from "@/components/FormContainer"
 import FormModal from "@/components/FormModal"
 import Pagination from "@/components/Pagination"
 import Table from "@/components/Table"
 import TableSearch from "@/components/TableSearch"
-import { classesData, role, subjectsData } from "@/lib/data"
 import prisma from "@/lib/prisma"
 import { ITEMS_PER_PAGE } from "@/lib/settings"
+import { getRole } from "@/lib/utils"
 import { Class, Prisma, Teacher } from "@prisma/client"
 import Image from "next/image"
-import Link from "next/link"
 
 
 type ClassList = Class & { supervisor: Teacher }
 
 
-const columns = [
-        {
-                header: "Class name",
-                accessor: "name",
-        },
-        {
-                header: "Capacity",
-                accessor: "capacity",
-                className: "hidden md:table-cell",
-        },
-        {
-                header: "Grade",
-                accessor: "grade",
-                className: "hidden md:table-cell",
-        },
-        {
-                header: "Supervisor",
-                accessor: "supervisor",
-                className: "hidden md:table-cell",
-        },
-        {
-                header: "Actions",
-                accessor: "action",
-        }
-]
-
-
-const renderRow = (item: ClassList) => {
-        return (
-                <tr key={item.id} className="border-b border-gray-200 text-sm even:bg-slate-50 hover:bg-lamaPurpleLight">
-                        <td className="flex items-center gap-4 p-4">
-                                <h3 className="font-semibold">{item.name}</h3>
-                        </td>
-                        <td className="hidden md:table-cell">{item.capacity}</td>
-                        <td className="hidden md:table-cell">{item.name[0]}</td>
-                        <td className="hidden md:table-cell">{item.supervisor.name + " " + item.supervisor.surname}</td>
-                        <td>
-                                <div className="flex items-center gap-2">
-                                        {role === "admin" && (
-                                                <>
-                                                <FormModal table="class" type="update" data={item} />
-                                                <FormModal table="class" type="delete" id={item.id} />
-                                                </>
-                                        )}
-                                </div>
-                        </td>
-                </tr>
-        )
-}
 
 
 const ClassListPage = async ({
@@ -72,6 +23,67 @@ const ClassListPage = async ({
 }: {
         searchParams: { [key: string]: string | undefined };
 }) => {
+
+        const columns = [
+                {
+                        header: "Class name",
+                        accessor: "name",
+                },
+                {
+                        header: "Capacity",
+                        accessor: "capacity",
+                        className: "hidden md:table-cell",
+                },
+                {
+                        header: "Grade",
+                        accessor: "grade",
+                        className: "hidden md:table-cell",
+                },
+                {
+                        header: "Supervisor",
+                        accessor: "supervisor",
+                        className: "hidden md:table-cell",
+                },
+                ...(
+                        getRole() === "admin"
+                                ? [{
+                                        header: "Actions",
+                                        accessor: "action",
+                                }]
+                                : []
+                ),
+        ]
+
+
+        const renderRow = (item: ClassList) => {
+                return (
+                        <tr key={item.id} className="border-b border-gray-200 text-sm even:bg-slate-50 hover:bg-lamaPurpleLight">
+                                <td className="flex items-center gap-4 p-4">
+                                        {item.name}
+                                </td>
+                                <td className="hidden md:table-cell">
+                                        {item.capacity}
+                                </td>
+                                <td className="hidden md:table-cell">
+                                        {item.name[0]}
+                                </td>
+                                <td className="hidden md:table-cell">
+                                        {item.supervisor.name + " " + item.supervisor.surname}
+                                </td>
+                                <td>
+                                        <div className="flex items-center gap-2">
+                                                {getRole() === "admin" && (
+                                                        <>
+                                                                <FormContainer table="class" type="update" data={item} />
+                                                                <FormContainer table="class" type="delete" id={item.id} />
+                                                        </>
+                                                )}
+                                        </div>
+                                </td>
+                        </tr>
+                )
+        }
+
 
         const { page, ...queryParams } = searchParams;
         const p = page ? parseInt(page) : 1;
@@ -131,11 +143,8 @@ const ClassListPage = async ({
                                                 <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow ">
                                                         <Image src="/sort.png" alt="" width={14} height={14} />
                                                 </button>
-                                                {role === "admin" && (
-                                                        // <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow ">
-                                                        //         <Image src="/plus.png" alt="" width={14} height={14} />
-                                                        // </button>
-                                                        <FormModal table="class" type="create" />
+                                                {getRole() === "admin" && (
+                                                        <FormContainer table="class" type="create" />
                                                 )}
                                         </div>
                                 </div>

@@ -5,12 +5,11 @@ import FormModal from "@/components/FormModal"
 import Pagination from "@/components/Pagination"
 import Table from "@/components/Table"
 import TableSearch from "@/components/TableSearch"
-import { parentsData, role } from "@/lib/data"
 import prisma from "@/lib/prisma"
 import { ITEMS_PER_PAGE } from "@/lib/settings"
+import { getRole } from "@/lib/utils"
 import { Parent, Prisma, Student } from "@prisma/client"
 import Image from "next/image"
-import Link from "next/link"
 
 
 type ParentList = Parent & { students: Student[] }
@@ -36,10 +35,14 @@ const columns = [
                 accessor: "address",
                 className: "hidden lg:table-cell",
         },
-        {
-                header: "Actions",
-                accessor: "action",
-        }
+        ...(
+                getRole() === "admin"
+                        ? [{
+                                header: "Actions",
+                                accessor: "action",
+                        }]
+                        : []
+        )
 ]
 
 
@@ -57,7 +60,7 @@ const renderRow = (item: ParentList) => {
                         <td className="hidden lg:table-cell">{item.address}</td>
                         <td>
                                 <div className="flex items-center gap-2">
-                                        {role === "admin" && (
+                                        {getRole() === "admin" && (
                                                 <>
                                                 <FormModal table="parent" type="update" data={item} />
                                                 <FormModal table="parent" type="delete" id={item.id} />
@@ -131,11 +134,9 @@ const ParentListPage = async ({
                                                 <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow ">
                                                         <Image src="/sort.png" alt="" width={14} height={14} />
                                                 </button>
-                                                {role === "admin" && (
-                                                        <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow ">
-                                                                <Image src="/plus.png" alt="" width={14} height={14} />
-                                                        </button>
-                                                )}
+                                                {getRole() === "admin" &&
+                                                        <FormModal table="parent" type="create" />
+                                                }
                                         </div>
                                 </div>
                         </div>

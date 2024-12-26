@@ -11,13 +11,16 @@ const Table = ({
         renderRow: (item: any) => React.ReactNode;
         data: any[]
 }) => {
+
         return (
                 <table className="w-full mt-4">
                         <thead>
                                 <tr className="text-left to-gray-500 text-sm">
-                                        {columns.map((col) => (
-                                                <th key={col.accessor} className={col.className}>{col.header}</th>
-                                        ))}
+                                        {
+                                                columns.map((col) => (
+                                                        <th key={col.accessor} className={col.className}>{col.header}</th>
+                                                ))
+                                        }
                                 </tr>
                         </thead>
                         <tbody>
