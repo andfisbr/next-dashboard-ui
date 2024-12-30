@@ -1,6 +1,7 @@
 //
 //
 //
+import FormContainer from "@/components/FormContainer"
 import FormModal from "@/components/FormModal"
 import Pagination from "@/components/Pagination"
 import Table from "@/components/Table"
@@ -15,48 +16,6 @@ import Image from "next/image"
 type SubjectList = Subject & { teachers: Teacher[] }
 
 
-const columns = [
-        {
-                header: "Subject name",
-                accessor: "name",
-        },
-        {
-                header: "Teachers",
-                accessor: "teachers",
-                className: "hidden md:table-cell",
-        },
-        ...(
-                getRole() === "admin"
-                       ? [{
-                                header: "Actions",
-                                accessor: "action",
-                        }]
-                        : []
-        )
-]
-
-
-
-const renderRow = (item: SubjectList) => {
-        return (
-                <tr key={item.id} className="border-b border-gray-200 text-sm even:bg-slate-50 hover:bg-lamaPurpleLight">
-                        <td className="flex items-center gap-4 p-4">
-                                <h3 className="font-semibold">{item.name}</h3>
-                        </td>
-                        <td className="hidden md:table-cell">{item.teachers.map(it => it.name).join(",")}</td>
-                        <td>
-                                <div className="flex items-center gap-2">
-                                        {getRole() === "admin" && (
-                                                <>
-                                                <FormModal table="subject" type="update" data={item} />
-                                                <FormModal table="subject" type="delete" id={item.id} />
-                                                </>
-                                        )}
-                                </div>
-                        </td>
-                </tr>
-        )
-}
 
 
 const SubjectListPage = async ({
@@ -64,6 +23,51 @@ const SubjectListPage = async ({
 }: {
         searchParams: { [key: string]: string | undefined };
 }) => {
+
+        const columns = [
+                {
+                        header: "Subject name",
+                        accessor: "name",
+                },
+                {
+                        header: "Teachers",
+                        accessor: "teachers",
+                        className: "hidden md:table-cell",
+                },
+                ...(
+                        getRole() === "admin"
+                                ? [{
+                                        header: "Actions",
+                                        accessor: "action",
+                                }]
+                                : []
+                )
+        ]
+
+
+
+        const renderRow = (item: SubjectList) => {
+                return (
+                        <tr key={item.id} className="border-b border-gray-200 text-sm even:bg-slate-50 hover:bg-lamaPurpleLight">
+                                <td className="flex items-center gap-4 p-4">
+                                        <h3 className="font-semibold">{item.name}</h3>
+                                </td>
+                                <td className="hidden md:table-cell">{item.teachers.map(it => it.name).join(",")}</td>
+                                <td>
+                                        <div className="flex items-center gap-2">
+                                                {getRole() === "admin" && (
+                                                        <>
+                                                                <FormContainer table="subject" type="update" data={item} />
+                                                                <FormContainer table="subject" type="delete" id={item.id} />
+                                                        </>
+                                                )}
+                                        </div>
+                                </td>
+                        </tr>
+                )
+        }
+
+
 
         const { page, ...queryParams } = searchParams;
         const p = page ? parseInt(page) : 1;
@@ -108,11 +112,15 @@ const SubjectListPage = async ({
                 <div className="bg-white p-4 rounded-md flex-1 m-4- mt-0">
                         {/* TOP */}
                         <div className="flex items-center justify-between">
+
                                 <div className="hidden md:block text-lg font-semibold">
                                         All subjects ({count})
                                 </div>
+
                                 <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+
                                         <TableSearch />
+
                                         <div className="flex items-center gap-4 self-end">
                                                 <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow ">
                                                         <Image src="/filter.png" alt="" width={14} height={14} />
@@ -121,10 +129,7 @@ const SubjectListPage = async ({
                                                         <Image src="/sort.png" alt="" width={14} height={14} />
                                                 </button>
                                                 {getRole() === "admin" && (
-                                                        // <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow ">
-                                                        //         <Image src="/plus.png" alt="" width={14} height={14} />
-                                                        // </button>
-                                                        <FormModal table="subject" type="create" />
+                                                        <FormContainer table="subject" type="create" />
                                                 )}
                                         </div>
                                 </div>

@@ -1,6 +1,7 @@
 //
 //
 //
+import FormContainer from "@/components/FormContainer"
 import FormModal from "@/components/FormModal"
 import Pagination from "@/components/Pagination"
 import Table from "@/components/Table"
@@ -26,77 +27,7 @@ type ResultList = {
 }
 
 
-const columns = [
-        {
-                header: "Title",
-                accessor: "title",
-        },
-        {
-                header: "Class",
-                accessor: "class",
-                className: "hidden md:table-cell",
-        },
-        {
-                header: "Teacher",
-                accessor: "teacher",
-                className: "hidden md:table-cell",
-        },
-        {
-                header: "Student",
-                accessor: "Student",
-                className: "hidden md:table-cell",
-        },
-        {
-                header: "Date",
-                accessor: "date",
-                className: "hidden md:table-cell",
-        },
-        {
-                header: "Type",
-                accessor: "type",
-                className: "hidden md:table-cell",
-        },
-        {
-                header: "Score",
-                accessor: "score",
-                className: "hidden md:table-cell",
-        },
-        ...(
-                ["admin", "teacher"].includes(getRole())
-                        ? [{
-                                header: "Actions",
-                                accessor: "action",
-                        }]
-                        : []
-        )
-]
 
-
-const renderRow = (item: ResultList) => {
-        return (
-                <tr key={item.id} className="border-b border-gray-200 text-sm even:bg-slate-50 hover:bg-lamaPurpleLight">
-                        <td className="flex items-center gap-4 p-4">
-                                <h3 className="font-semibold">{item.title}</h3>
-                        </td>
-                        <td className="hidden md:table-cell">{item.className}</td>
-                        <td className="hidden md:table-cell">{item.teacherName + " " + item.teacherSurname}</td>
-                        <td className="hidden md:table-cell">{item.studentName + " " + item.studentSurname}</td>
-                        <td className="hidden md:table-cell">{new Intl.DateTimeFormat("pt-BR").format(item.startTime)}</td>
-                        <td className="hidden md:table-cell">{item.type}</td>
-                        <td className="hidden md:table-cell">{item.score}</td>
-                        <td>
-                                <div className="flex items-center gap-2">
-                                        {(getRole() === "admin" || getRole() === "teacher") && (
-                                                <>
-                                                <FormModal table="result" type="update" data={item} />
-                                                <FormModal table="result" type="delete" id={item.id} />
-                                                </>
-                                        )}
-                                </div>
-                        </td>
-                </tr>
-        )
-}
 
 
 const ResultListPage = async ({
@@ -104,6 +35,89 @@ const ResultListPage = async ({
 }: {
         searchParams: { [key: string]: string | undefined };
 }) => {
+
+        const columns = [
+                {
+                        header: "Title",
+                        accessor: "title",
+                },
+                {
+                        header: "Class",
+                        accessor: "class",
+                        className: "hidden md:table-cell",
+                },
+                {
+                        header: "Teacher",
+                        accessor: "teacher",
+                        className: "hidden md:table-cell",
+                },
+                {
+                        header: "Student",
+                        accessor: "Student",
+                        className: "hidden md:table-cell",
+                },
+                {
+                        header: "Date",
+                        accessor: "date",
+                        className: "hidden md:table-cell",
+                },
+                {
+                        header: "Type",
+                        accessor: "type",
+                        className: "hidden md:table-cell",
+                },
+                {
+                        header: "Score",
+                        accessor: "score",
+                        className: "hidden md:table-cell",
+                },
+                ...(
+                        ["admin", "teacher"].includes(getRole())
+                                ? [{
+                                        header: "Actions",
+                                        accessor: "action",
+                                }]
+                                : []
+                )
+        ]
+
+
+        const renderRow = (item: ResultList) => {
+                return (
+                        <tr key={item.id} className="border-b border-gray-200 text-sm even:bg-slate-50 hover:bg-lamaPurpleLight">
+                                <td className="flex items-center gap-4 p-4">
+                                        {item.title}
+                                </td>
+                                <td>
+                                        {item.studentName + " " + item.studentSurname}
+                                </td>
+                                <td className="hidden md:table-cell">
+                                        {item.score}
+                                </td>
+                                <td className="hidden md:table-cell">
+                                        {item.teacherName + " " + item.teacherSurname}
+                                </td>
+                                <td className="hidden md:table-cell">
+                                        {item.className}
+                                </td>
+                                <td className="hidden md:table-cell">
+                                        {new Intl.DateTimeFormat("pt-BR").format(item.startTime)}
+                                </td>
+                                <td>
+                                        <div className="flex items-center gap-2">
+                                                {(getRole() === "admin" || getRole() === "teacher") && (
+                                                        <>
+                                                                <FormContainer table="result" type="update" data={item} />
+                                                                <FormContainer table="result" type="delete" id={item.id} />
+                                                        </>
+                                                )}
+                                        </div>
+                                </td>
+                        </tr>
+                )
+        }
+
+
 
         const { page, ...queryParams } = searchParams;
         const p = page ? parseInt(page) : 1;
@@ -235,10 +249,7 @@ const ResultListPage = async ({
                                                         <Image src="/sort.png" alt="" width={14} height={14} />
                                                 </button>
                                                 {(getRole() === "admin" || getRole() === "teacher") && (
-                                                        // <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow ">
-                                                        //         <Image src="/plus.png" alt="" width={14} height={14} />
-                                                        // </button>
-                                                        <FormModal table="result" type="create" />
+                                                        <FormContainer table="result" type="create" />
                                                 )}
                                         </div>
                                 </div>

@@ -50,7 +50,7 @@ const TeacherForm = (
 
         const onSubmit = handleSubmit((data) => {
                 //console.log(data)
-                formAction( {...data, img: img?.secure_url })
+                formAction( {...data, image: img?.secure_url })
         })
 
 
@@ -80,17 +80,17 @@ const TeacherForm = (
                                 Authentication information
                         </span>
                         <div className="flex justify-between flex-wrap gap-4">
-                                <InputField label="Username" name="username" defaultValue={data?.username} register={register} error={errors.username} />
-                                <InputField label="Email" name="email" defaultValue={data?.email} register={register} error={errors.email} />
-                                <InputField label="Password" name="password" defaultValue={data?.password} register={register} error={errors.password} />
+                                <InputField label="Username" name="username" defaultValue={data?.username} register={register} error={errors?.username} />
+                                <InputField label="Email" name="email" defaultValue={data?.email} register={register} error={errors?.email} />
+                                <InputField label="Password" name="password" defaultValue={data?.password} register={register} error={errors?.password} />
                         </div>
 
                         <span className="text-xs text-gray-400 font-medium">
                                 Personal information
                         </span>
                         <div className="flex justify-between flex-wrap gap-4">
-                                <InputField label="First name" name="firstName" defaultValue={data?.firstName} register={register} error={errors.firstName} />
-                                <InputField label="Last name" name="lastName" defaultValue={data?.lastName} register={register} error={errors.lastName} />
+                                <InputField label="First name" name="firstName" defaultValue={data?.name} register={register} error={errors.name} />
+                                <InputField label="Last name" name="lastName" defaultValue={data?.surname} register={register} error={errors.surname} />
                                 <InputField label="phone" name="phone" defaultValue={data?.phone} register={register} error={errors.phone} />
                                 <InputField label="Address" name="address" defaultValue={data?.address} register={register} error={errors.address} />
                                 <InputField label="Blood type" name="bloodType" defaultValue={data?.bloodType} register={register} error={errors.bloodType} />

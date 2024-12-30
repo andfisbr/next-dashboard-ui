@@ -1,7 +1,5 @@
 import Announcements from "@/components/Announcements"
 import FormContainer from "@/components/FormContainer"
-import FormModal from "@/components/FormModal"
-import MyCalendar from "@/components/MyCalendar"
 import MyCalendarContainer from "@/components/MyCalendarContainer"
 import PerformanceChart from "@/components/PerformanceChart"
 import prisma from "@/lib/prisma"

@@ -1,6 +1,7 @@
 //
 //
 //
+import FormContainer from "@/components/FormContainer"
 import FormModal from "@/components/FormModal"
 import Pagination from "@/components/Pagination"
 import Table from "@/components/Table"
@@ -15,62 +16,7 @@ import Image from "next/image"
 type ParentList = Parent & { students: Student[] }
 
 
-const columns = [
-        {
-                header: "Info",
-                accessor: "info",
-        },
-        {
-                header: "Students name",
-                accessor: "students",
-                className: "hidden md:table-cell",
-        },
-        {
-                header: "Phone",
-                accessor: "phone",
-                className: "hidden lg:table-cell",
-        },
-        {
-                header: "Address",
-                accessor: "address",
-                className: "hidden lg:table-cell",
-        },
-        ...(
-                getRole() === "admin"
-                        ? [{
-                                header: "Actions",
-                                accessor: "action",
-                        }]
-                        : []
-        )
-]
 
-
-const renderRow = (item: ParentList) => {
-        return (
-                <tr key={item.id} className="border-b border-gray-200 text-sm even:bg-slate-50 hover:bg-lamaPurpleLight">
-                        <td className="flex items-center gap-4 p-4">
-                                <div className="flex flex-col">
-                                        <h3 className="font-semibold">{item.name}</h3>
-                                        <p className="text-xs to-gray-500">{item?.email}</p>
-                                </div>
-                        </td>
-                        <td className="hidden md:table-cell">{item.students.map(s => s.name).join(",")}</td>
-                        <td className="hidden lg:table-cell">{item.phone}</td>
-                        <td className="hidden lg:table-cell">{item.address}</td>
-                        <td>
-                                <div className="flex items-center gap-2">
-                                        {getRole() === "admin" && (
-                                                <>
-                                                <FormModal table="parent" type="update" data={item} />
-                                                <FormModal table="parent" type="delete" id={item.id} />
-                                                </>
-                                        )}
-                                </div>
-                        </td>
-                </tr>
-        )
-}
 
 
 const ParentListPage = async ({
@@ -78,6 +24,65 @@ const ParentListPage = async ({
 }: {
         searchParams: { [key: string]: string | undefined };
 }) => {
+
+        const columns = [
+                {
+                        header: "Info",
+                        accessor: "info",
+                },
+                {
+                        header: "Students name",
+                        accessor: "students",
+                        className: "hidden md:table-cell",
+                },
+                {
+                        header: "Phone",
+                        accessor: "phone",
+                        className: "hidden lg:table-cell",
+                },
+                {
+                        header: "Address",
+                        accessor: "address",
+                        className: "hidden lg:table-cell",
+                },
+                ...(
+                        getRole() === "admin"
+                                ? [{
+                                        header: "Actions",
+                                        accessor: "action",
+                                }]
+                                : []
+                )
+        ]
+
+
+        const renderRow = (item: ParentList) => {
+                return (
+                        <tr key={item.id} className="border-b border-gray-200 text-sm even:bg-slate-50 hover:bg-lamaPurpleLight">
+                                <td className="flex items-center gap-4 p-4">
+                                        <div className="flex flex-col">
+                                                <h3 className="font-semibold">{item.name}</h3>
+                                                <p className="text-xs to-gray-500">{item?.email}</p>
+                                        </div>
+                                </td>
+                                <td className="hidden md:table-cell">{item.students.map(s => s.name).join(",")}</td>
+                                <td className="hidden lg:table-cell">{item.phone}</td>
+                                <td className="hidden lg:table-cell">{item.address}</td>
+                                <td>
+                                        <div className="flex items-center gap-2">
+                                                {getRole() === "admin" && (
+                                                        <>
+                                                                <FormContainer table="parent" type="update" data={item} />
+                                                                <FormContainer table="parent" type="delete" id={item.id} />
+                                                        </>
+                                                )}
+                                        </div>
+                                </td>
+                        </tr>
+                )
+        }
+
+
 
         const { page, ...queryParams } = searchParams;
         const p = page ? parseInt(page) : 1;
@@ -135,7 +140,7 @@ const ParentListPage = async ({
                                                         <Image src="/sort.png" alt="" width={14} height={14} />
                                                 </button>
                                                 {getRole() === "admin" &&
-                                                        <FormModal table="parent" type="create" />
+                                                        <FormContainer table="parent" type="create" />
                                                 }
                                         </div>
                                 </div>
